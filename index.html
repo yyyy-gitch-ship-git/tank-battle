@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="坦克大战 TANK BATTLE — 一款用原生 HTML5 Canvas 打造的街机坦克游戏。守住基地，击退五波敌军。">
+  <meta name="theme-color" content="#07111a">
+  <title>坦克大战 · TANK BATTLE</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307111a'/%3E%3Crect x='12' y='30' width='40' height='20' rx='4' fill='%2357e3c3'/%3E%3Crect x='26' y='16' width='18' height='18' rx='3' fill='%2357e3c3'/%3E%3Crect x='42' y='21' width='14' height='5' rx='2' fill='%2357e3c3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="坦克大战首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none">
+            <rect x="4" y="20" width="32" height="15" rx="3" stroke="currentColor" stroke-width="2.5"/>
+            <rect x="14" y="10" width="16" height="14" rx="2" fill="currentColor"/>
+            <path d="M28 15h9" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="10" cy="27" r="2" fill="currentColor"/>
+            <circle cx="30" cy="27" r="2" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-title">坦克大战</span>
+          <span class="brand-sub">TANK BATTLE</span>
+        </span>
+      </a>
+      <div class="top-actions">
+        <span class="build-tag">HTML5 · CANVAS</span>
+        <button id="soundBtn" class="ghost-btn" type="button" aria-pressed="true" aria-label="切换声音">
+          <svg class="sound-on" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="sound-off" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="m17 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="sound-label">声音</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="game-shell" aria-label="坦克大战游戏">
+        <div class="hud" aria-live="polite">
+          <div class="hud-item hud-score">
+            <span class="hud-label">得分 SCORE</span>
+            <strong id="scoreEl">000000</strong>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">最高 BEST</span>
+            <span id="bestEl" class="hud-value">000000</span>
+          </div>
+          <div class="hud-item hud-level">
+            <span class="hud-label">关卡 STAGE</span>
+            <span class="hud-value"><b id="levelEl">01</b><i>/ 05</i></span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">生命 LIFE</span>
+            <span id="livesEl" class="lives" aria-label="剩余生命"></span>
+          </div>
+          <div class="hud-item hud-enemies">
+            <span class="hud-label">敌军 ENEMY</span>
+            <span class="hud-value enemy-count">
+              <svg viewBox="0 0 24 16" aria-hidden="true"><rect x="1" y="6" width="22" height="9" rx="2" fill="currentColor"/><rect x="8" y="1" width="8" height="8" rx="1" fill="currentColor"/><path d="M15 3h7" stroke="currentColor" stroke-width="2"/></svg>
+              <b id="enemiesEl">08</b>
+            </span>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <canvas id="game" width="720" height="720" aria-label="坦克大战游戏画面"></canvas>
+          <div id="buffs" class="buffs" aria-live="polite"></div>
+          <div class="crt" aria-hidden="true"></div>
+          <button id="pauseBtn" class="pause-btn" type="button" aria-label="暂停游戏" title="暂停 (P)">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+          <div id="overlay" class="overlay" aria-hidden="true"></div>
+        </div>
+
+        <div class="touch-controls" id="touchControls" aria-label="触屏控制">
+          <div class="dpad">
+            <button type="button" class="dpad-btn up" data-dir="0" aria-label="向上">
+              <svg viewBox="0 0 24 24"><path d="M12 6l7 9H5z"/></svg>
+            </button>
+            <button type="button" class="dpad-btn left" data-dir="3" aria-label="向左">
+              <svg viewBox="0 0 24 24"><path d="M6 12l9-7v14z"/></svg>
+            </button>
+            <button type="button" class="dpad-btn right" data-dir="1" aria-label="向右">
+              <svg viewBox="0 0 24 24"><path d="M18 12l-9 7V5z"/></svg>
+            </button>
+            <button type="button" class="dpad-btn down" data-dir="2" aria-label="向下">
+              <svg viewBox="0 0 24 24"><path d="M12 18l-7-9h14z"/></svg>
+            </button>
+            <span class="dpad-hub" aria-hidden="true"></span>
+          </div>
+          <button type="button" class="fire-btn" id="fireBtn" aria-label="开火">
+            <span>FIRE</span>
+            <small>开火</small>
+          </button>
+        </div>
+
+        <div class="game-meta">
+          <span><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd> 移动</span>
+          <span><kbd>SPACE</kbd> 开火</span>
+          <span><kbd>P</kbd> 暂停</span>
+        </div>
+      </section>
+
+      <aside class="briefing">
+        <div class="briefing-head">
+          <span class="eyebrow">MISSION BRIEFING</span>
+          <h2>作战简报</h2>
+        </div>
+        <p class="lede">敌军装甲部队正从北面压境。驾驶你的坦克，守住底部的基地，击退全部五波进攻。</p>
+
+        <div class="brief-block">
+          <h3>战场目标</h3>
+          <ul class="objectives">
+            <li><span class="obj-num">01</span>消灭每一波全部敌军</li>
+            <li><span class="obj-num">02</span>基地徽章不可被击毁</li>
+            <li><span class="obj-num">03</span>三条装甲，用完即止</li>
+          </ul>
+        </div>
+
+        <div class="brief-block">
+          <h3>地形图例</h3>
+          <div class="legend">
+            <span><i class="swatch brick"></i>砖墙 · 可击毁</span>
+            <span><i class="swatch steel"></i>钢板 · 无法穿透</span>
+            <span><i class="swatch water"></i>水域 · 坦克禁行</span>
+            <span><i class="swatch grass"></i>草丛 · 隐蔽视野</span>
+          </div>
+        </div>
+
+        <div class="intel">
+          <span class="intel-dot" aria-hidden="true"></span>
+          <p><b>战地情报</b>击毁闪金光的敌军坦克会掉落补给：护盾、速射或额外生命。</p>
+        </div>
+
+        <div class="enemy-key">
+          <h3>敌军识别</h3>
+          <div class="enemy-row"><i class="tank-dot standard"></i><span>标准型</span><em>100</em></div>
+          <div class="enemy-row"><i class="tank-dot fast"></i><span>高速型</span><em>150</em></div>
+          <div class="enemy-row"><i class="tank-dot armor"></i><span>重甲型 · 需两发</span><em>250</em></div>
+          <div class="enemy-row"><i class="tank-dot special"></i><span>补给官 · 必掉补给</span><em>300</em></div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>STEEL DEFENSE PROTOCOL // 复古街机计划</span>
+      <span class="footer-right">用方向键开始你的防守 <i></i></span>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
